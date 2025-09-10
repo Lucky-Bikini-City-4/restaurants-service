@@ -30,6 +30,8 @@ ext {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
@@ -54,16 +56,6 @@ dependencies {
     // redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    //postgresql
-    runtimeOnly 'org.postgresql:postgresql'
-    testRuntimeOnly 'org.hsqldb:hsqldb'
-
-    // actuator
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    // Zipkin
-    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
-    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
 
 }
 
