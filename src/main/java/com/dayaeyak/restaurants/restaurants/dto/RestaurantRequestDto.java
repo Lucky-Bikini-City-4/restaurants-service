@@ -11,7 +11,6 @@ import java.time.LocalTime;
 @Data
 public class RestaurantRequestDto {
     private String name;
-    private Long sellerId;
     private String address;
     private String phoneNumber;
     private ClosedDays closedDay;

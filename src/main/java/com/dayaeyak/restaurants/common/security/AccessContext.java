@@ -7,10 +7,10 @@ import lombok.Getter;
 @Getter
 public class AccessContext {
     private final Long userId;
-    private final Role role;
+    private final UserRole role;
 
 
-    public static AccessContext of(Long userId, Role role) {
+    public static AccessContext of(Long userId, UserRole role) {
         return new AccessContext(userId, role);
     }
 

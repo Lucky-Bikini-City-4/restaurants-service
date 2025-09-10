@@ -2,6 +2,8 @@ package com.dayaeyak.restaurants.restaurants.entity;
 
 
 import com.dayaeyak.restaurants.operatingDays.entity.OperatingDays;
+import com.dayaeyak.restaurants.restaurants.dto.RestaurantRequestDto;
+import com.dayaeyak.restaurants.restaurants.dto.RestaurantResponseDto;
 import com.dayaeyak.restaurants.restaurants.enums.ActivationStatus;
 import com.dayaeyak.restaurants.restaurants.enums.ClosedDays;
 import com.dayaeyak.restaurants.restaurants.enums.RestaurantType;
@@ -68,11 +70,11 @@ public class Restaurant {
     @CreatedDate
     private LocalDateTime createdAt;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern =  "yyyy-MM-dd'T'HH:mm:ss")
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern =  "yyyy-MM-dd'T'HH:mm:ss")
     @Column(name="deleted_at")
     private LocalDateTime deletedAt;
 
@@ -84,4 +86,57 @@ public class Restaurant {
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OperatingDays> operatingDays;
 
+    // CRUD 메서드
+
+    //생성
+    public void create(RestaurantRequestDto dto, Long userId) {
+        this.name = dto.getName();
+        this.sellerId = userId;
+        this.address = dto.getAddress();
+        this.phoneNumber = dto.getPhoneNumber();
+        this.closedDay = dto.getClosedDay();
+        this.openTime = dto.getOpenTime();
+        this.closeTime = dto.getCloseTime();
+        this.type = dto.getType();
+        this.capacity = dto.getCapacity();
+        this.isActivation = dto.getIsActivation();
+        this.waitingActivation = dto.getWaitingActivation();
+    }
+
+    //수정
+    public void update(RestaurantRequestDto dto) {
+        this.name = dto.getName();
+        this.address = dto.getAddress();
+        this.phoneNumber = dto.getPhoneNumber();
+        this.closedDay = dto.getClosedDay();
+        this.openTime = dto.getOpenTime();
+        this.closeTime = dto.getCloseTime();
+        this.type = dto.getType();
+        this.capacity = dto.getCapacity();
+        this.isActivation = dto.getIsActivation();
+        this.waitingActivation = dto.getWaitingActivation();
+    }
+
+    // 소프트 삭제
+    public void delete(){
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public RestaurantResponseDto toResponseDto() {
+        RestaurantResponseDto dto = new RestaurantResponseDto();
+        dto.setId(this.id);
+        dto.setName(this.name);
+        dto.setSellerId(this.sellerId);
+        dto.setAddress(this.address);
+        dto.setPhoneNumber(this.phoneNumber);
+        dto.setClosedDay(this.closedDay);
+        dto.setOpenTime(this.openTime);
+        dto.setCloseTime(this.closeTime);
+        dto.setType(this.type);
+        dto.setCapacity(this.capacity);
+        dto.setIsActivation(this.isActivation);
+        dto.setWaitingActivation(this.waitingActivation);
+
+        return dto;
+    }
 }
