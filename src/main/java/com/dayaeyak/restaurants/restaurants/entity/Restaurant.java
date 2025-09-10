@@ -5,6 +5,7 @@ import com.dayaeyak.restaurants.operatingDays.entity.OperatingDays;
 import com.dayaeyak.restaurants.restaurants.enums.ActivationStatus;
 import com.dayaeyak.restaurants.restaurants.enums.ClosedDays;
 import com.dayaeyak.restaurants.restaurants.enums.RestaurantType;
+import com.dayaeyak.restaurants.restaurants.enums.WaitingStatus;
 import com.dayaeyak.restaurants.seats.entity.Seats;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
@@ -44,8 +45,10 @@ public class Restaurant {
     @Enumerated(EnumType.STRING)
     private ClosedDays closedDay;       // 기본 휴무일
 
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime openTime;        // 영업 시작 시간
 
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime closeTime;      // 영업 종료 시간
 
     @Enumerated(EnumType.STRING)
@@ -58,7 +61,8 @@ public class Restaurant {
 
     private String city;
 
-    private Boolean waitingActivation;   // 웨이팅 사용 유무
+    @Enumerated(EnumType.STRING)
+    private WaitingStatus waitingActivation;   // 웨이팅 사용 유무
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @CreatedDate
