@@ -2,6 +2,7 @@ package com.dayaeyak.restaurants.operatingDays.entity;
 
 import com.dayaeyak.restaurants.restaurants.entity.Restaurant;
 import com.dayaeyak.restaurants.restaurants.enums.ClosedDays;
+import com.dayaeyak.restaurants.seats.entity.Seats;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -29,7 +30,10 @@ public class OperatingDays {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDate date; // 운영 요일
+    private LocalDate date; // 오늘 날짜
+
+    @Enumerated(EnumType.STRING)
+    private ClosedDays operatingDate; // 현재 요일
 
     private boolean isOpen; // 해당 요일 운영 여부
 
@@ -49,6 +53,26 @@ public class OperatingDays {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // 오늘 날짜 기준으로 OperatingDays 생성
+    public static OperatingDays createForDate(Restaurant restaurant, LocalDate date) {
+        OperatingDays op = new OperatingDays();
+        op.setRestaurant(restaurant);
+        op.setDate(date);
 
+        ClosedDays day = ClosedDays.fromDayOfWeek(DayOfWeek.from(date));
+        op.setOperatingDate(day);
+        op.setOpen(!day.equals(restaurant.getClosedDay()));
+
+        //seats 생성
+        Seats seat = new Seats();
+        seat.setRestaurant(restaurant);
+        seat.setDate(date);
+        seat.setAvailableSeats(restaurant.getCapacity());
+        restaurant.getSeats().add(seat);
+
+        restaurant.getOperatingDays().add(op);
+
+        return op;
+    }
 
 }

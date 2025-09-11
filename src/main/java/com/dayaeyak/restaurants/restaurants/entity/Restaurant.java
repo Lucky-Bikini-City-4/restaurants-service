@@ -22,6 +22,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -81,16 +82,27 @@ public class Restaurant {
 
     // 잔여좌석 테이블 -> 자동 생성/삭제/수정 가능
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Seats> seats;
+    private List<Seats> seats = new ArrayList<>();
 
     // 영업일 테이블 -> 요일별 운영 정보 관리
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OperatingDays> operatingDays;
+    private List<OperatingDays> operatingDays = new ArrayList<>();
 
     // CRUD 메서드
 
     //생성
     public void create(RestaurantRequestDto dto, Long userId) {
+        setBasicInfo(dto, userId);
+        generateOperatingDaysAndSeats(30); // 등록 시 미래 30일까지 자동 생성
+    }
+
+    //수정
+    public void update(RestaurantRequestDto dto) {
+        setBasicInfo(dto, this.sellerId);
+        generateOperatingDaysAndSeats(30); // 수정 시 미래 30일까지 동기화
+    }
+
+    private void setBasicInfo(RestaurantRequestDto dto, Long userId) {
         this.name = dto.getName();
         this.sellerId = userId;
         this.address = dto.getAddress();
@@ -102,51 +114,6 @@ public class Restaurant {
         this.capacity = dto.getCapacity();
         this.isActivation = dto.getIsActivation();
         this.waitingActivation = dto.getWaitingActivation();
-
-        // 잔여좌석 기본 생성
-        Seats seat = new Seats();
-        seat.setDate(LocalDate.now());
-        seat.setAvailableSeats(this.capacity);
-        seat.setRestaurant(this);
-        this.seats.add(seat);
-
-        // 운영 일자 생성
-        for (ClosedDays day : ClosedDays.values()) {
-            OperatingDays op = new OperatingDays();
-            op.setDayOfWeek(day);
-            op.setOpen(!day.equals(this.closedDay));
-            this.operatingDays.add(op);
-        }
-    }
-
-    //수정
-    public void update(RestaurantRequestDto dto) {
-        this.name = dto.getName();
-        this.address = dto.getAddress();
-        this.phoneNumber = dto.getPhoneNumber();
-        this.closedDay = dto.getClosedDay();
-        this.openTime = dto.getOpenTime();
-        this.closeTime = dto.getCloseTime();
-        this.type = dto.getType();
-        this.capacity = dto.getCapacity();
-        this.isActivation = dto.getIsActivation();
-        this.waitingActivation = dto.getWaitingActivation();
-
-        // 잔여좌석 수정 반영
-        if (this.seats != null) {
-            this.seats.forEach(seat -> seat.setRestaurant(this));
-        }
-
-        // 운영일자 동기화
-        if (this.operatingDays != null) {
-            this.operatingDays.forEach(op ->{
-                if (op.getDayOfWeek().equals(this.closedDay)) {
-                    op.setOpen(false);
-                }else{
-                    op.setOpen(true);
-                }
-            });
-        }
     }
 
     // 소프트 삭제
@@ -159,6 +126,47 @@ public class Restaurant {
         if(this.operatingDays != null){
             this.operatingDays.forEach(s -> s.setDeletedAt(LocalDateTime.now()));
         }
+    }
+
+    public void generateOperatingDaysAndSeats(int daysAhead) {
+        LocalDate today = LocalDate.now();
+        for (int i = 0; i < daysAhead; i++) {
+            LocalDate date = today.plusDays(i);
+            upsertOperatingDayAndSeat(date);
+        }
+    }
+
+    private void upsertOperatingDayAndSeat(LocalDate date) {
+        ClosedDays dayOfWeek = ClosedDays.fromDayOfWeek(date.getDayOfWeek());
+
+        // 운영일 가져오기 또는 생성
+        OperatingDays op = operatingDays.stream()
+                .filter(o -> o.getDate().equals(date))
+                .findFirst()
+                .orElseGet(() -> {
+                    OperatingDays newOp = new OperatingDays();
+                    newOp.setRestaurant(this);
+                    operatingDays.add(newOp);
+                    return newOp;
+                });
+
+        op.setDate(date);
+        op.setOperatingDate(dayOfWeek);
+        op.setOpen(!dayOfWeek.equals(this.closedDay));
+
+        // 좌석 가져오기 또는 생성
+        Seats seat = seats.stream()
+                .filter(s -> s.getDate().equals(date))
+                .findFirst()
+                .orElseGet(() -> {
+                    Seats newSeat = new Seats();
+                    newSeat.setRestaurant(this);
+                    seats.add(newSeat);
+                    return newSeat;
+                });
+
+        seat.setDate(date);
+        seat.setAvailableSeats(this.capacity);
     }
 
     public RestaurantResponseDto toResponseDto() {
@@ -175,7 +183,6 @@ public class Restaurant {
         dto.setCapacity(this.capacity);
         dto.setIsActivation(this.isActivation);
         dto.setWaitingActivation(this.waitingActivation);
-
         return dto;
     }
 }
