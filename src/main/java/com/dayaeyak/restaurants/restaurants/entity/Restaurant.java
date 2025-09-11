@@ -19,6 +19,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -101,6 +102,21 @@ public class Restaurant {
         this.capacity = dto.getCapacity();
         this.isActivation = dto.getIsActivation();
         this.waitingActivation = dto.getWaitingActivation();
+
+        // 잔여좌석 기본 생성
+        Seats seat = new Seats();
+        seat.setDate(LocalDate.now());
+        seat.setAvailableSeats(this.capacity);
+        seat.setRestaurant(this);
+        this.seats.add(seat);
+
+        // 운영 일자 생성
+        for (ClosedDays day : ClosedDays.values()) {
+            OperatingDays op = new OperatingDays();
+            op.setDayOfWeek(day);
+            op.setOpen(!day.equals(this.closedDay));
+            this.operatingDays.add(op);
+        }
     }
 
     //수정
@@ -115,11 +131,34 @@ public class Restaurant {
         this.capacity = dto.getCapacity();
         this.isActivation = dto.getIsActivation();
         this.waitingActivation = dto.getWaitingActivation();
+
+        // 잔여좌석 수정 반영
+        if (this.seats != null) {
+            this.seats.forEach(seat -> seat.setRestaurant(this));
+        }
+
+        // 운영일자 동기화
+        if (this.operatingDays != null) {
+            this.operatingDays.forEach(op ->{
+                if (op.getDayOfWeek().equals(this.closedDay)) {
+                    op.setOpen(false);
+                }else{
+                    op.setOpen(true);
+                }
+            });
+        }
     }
 
     // 소프트 삭제
     public void delete(){
         this.deletedAt = LocalDateTime.now();
+
+        if(this.seats != null){
+            this.seats.forEach(s -> s.setDeletedAt(LocalDateTime.now()));
+        }
+        if(this.operatingDays != null){
+            this.operatingDays.forEach(s -> s.setDeletedAt(LocalDateTime.now()));
+        }
     }
 
     public RestaurantResponseDto toResponseDto() {

@@ -12,6 +12,8 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -27,8 +29,7 @@ public class OperatingDays {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private ClosedDays dayOfWeek; // 요일
+    private LocalDate date; // 운영 요일
 
     private boolean isOpen; // 해당 요일 운영 여부
 
@@ -47,4 +48,7 @@ public class OperatingDays {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+
+
 }

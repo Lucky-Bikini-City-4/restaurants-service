@@ -1,6 +1,5 @@
 package com.dayaeyak.restaurants.seats.dto;
 
-
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,8 +7,7 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-public class SeatsRequestDto {
-    private Long restaurantId;
+public class SeatAvailabilityDto {
     private LocalDate date;
-    private int count;   //선택한 좌석
+    private int availableSeats;
 }
