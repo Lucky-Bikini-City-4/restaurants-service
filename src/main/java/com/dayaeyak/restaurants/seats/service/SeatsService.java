@@ -57,7 +57,7 @@ public class SeatsService {
     @Transactional
     public void RestoreSeatsScheduled(){
         LocalDateTime now = LocalDateTime.now();       // ExecuteAtBefore: 실행 예정 시간이 지금보다 이전
-        List<SeatRestoreTask> tasks = taskRepository.findByExecutedFalseAndExecutedBefore(now);
+        List<SeatRestoreTask> tasks = taskRepository.findByExecutedFalseAndExecuteAtBefore(now);
 
         for(SeatRestoreTask task : tasks){
             Seats seat = seatsRepository.findById(task.getSeatId())

@@ -7,5 +7,5 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface SeatsRestoreTaskRepository extends JpaRepository<SeatRestoreTask, Long> {
-    List<SeatRestoreTask> findByExecutedFalseAndExecutedBefore(LocalDateTime date);
+    List<SeatRestoreTask> findByExecutedFalseAndExecuteAtBefore(LocalDateTime date);
 }

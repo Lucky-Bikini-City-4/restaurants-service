@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 import org.springframework.data.annotation.CreatedDate;
@@ -23,7 +24,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -81,12 +84,13 @@ public class Restaurant {
     private LocalDateTime deletedAt;
 
     // 잔여좌석 테이블 -> 자동 생성/삭제/수정 가능
+    @BatchSize(size = 10)
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Seats> seats = new ArrayList<>();
+    private Set<Seats> seats = new HashSet<>();
 
     // 영업일 테이블 -> 요일별 운영 정보 관리
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OperatingDays> operatingDays = new ArrayList<>();
+    private Set<OperatingDays> operatingDays = new HashSet<>();
 
     // CRUD 메서드
 

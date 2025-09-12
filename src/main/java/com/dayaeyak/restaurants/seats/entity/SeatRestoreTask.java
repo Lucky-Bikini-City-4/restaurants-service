@@ -20,7 +20,8 @@ public class SeatRestoreTask {
 
     private int restoreCount;
 
+    private boolean executed = false;
+
     private LocalDateTime executeAt;
 
-    private boolean executed = false;
 }
