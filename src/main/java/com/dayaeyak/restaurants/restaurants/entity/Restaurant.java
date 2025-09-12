@@ -28,7 +28,7 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name= "restaurants")
+@Table(name = "restaurants")
 @EntityListeners(AuditingEntityListener.class)
 @SQLDelete(sql = "UPDATE restaurants SET deleted_at= NOW()")  // 소프트삭제 구현: delete 호출 시 실제 row는 남기고 deleted_at 컬럼만 갱신
 @Where(clause = "deleted_at IS NULL")
@@ -72,12 +72,12 @@ public class Restaurant {
     @CreatedDate
     private LocalDateTime createdAt;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern =  "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern =  "yyyy-MM-dd'T'HH:mm:ss")
-    @Column(name="deleted_at")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
     // 잔여좌석 테이블 -> 자동 생성/삭제/수정 가능
@@ -117,13 +117,13 @@ public class Restaurant {
     }
 
     // 소프트 삭제
-    public void delete(){
+    public void delete() {
         this.deletedAt = LocalDateTime.now();
 
-        if(this.seats != null){
+        if (this.seats != null) {
             this.seats.forEach(s -> s.setDeletedAt(LocalDateTime.now()));
         }
-        if(this.operatingDays != null){
+        if (this.operatingDays != null) {
             this.operatingDays.forEach(s -> s.setDeletedAt(LocalDateTime.now()));
         }
     }

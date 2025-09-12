@@ -15,7 +15,7 @@ public class HeaderAuditorAware implements AuditorAware<String> {
     @Override
     public Optional<String> getCurrentAuditor() {
         RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
-        if(!(attrs instanceof ServletRequestAttributes sra)) {
+        if (!(attrs instanceof ServletRequestAttributes sra)) {
             return Optional.empty(); // 요청 스코프 바깥(배치/비동기) 일 때 -> HTTP요청이 없는 상황
         }
         HttpServletRequest request = sra.getRequest();

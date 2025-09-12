@@ -35,7 +35,6 @@ public class Seats {
     @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
 
-
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @CreatedDate
     private LocalDateTime createdAt;

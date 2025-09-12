@@ -25,6 +25,6 @@ public class OperatingDaysController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<List<OperatingDaysResponseDto>>> getOperatingDays(@PathVariable("id") Long id) {
         List<OperatingDaysResponseDto> dtoList = service.getOperatingDays(id);
-        return  ApiResponse.success(HttpStatus.OK, "조회 성공", dtoList);
+        return ApiResponse.success(HttpStatus.OK, "조회 성공", dtoList);
     }
 }

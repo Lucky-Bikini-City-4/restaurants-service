@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-
 @Service
 @RequiredArgsConstructor
 public class OperatingDaysService {
@@ -32,9 +31,9 @@ public class OperatingDaysService {
         List<Restaurant> restaurants = restaurantRepository.findAll();
         LocalDate now = LocalDate.now();
 
-        for(Restaurant r : restaurants) {
+        for (Restaurant r : restaurants) {
             OperatingDays existing = operatingDaysRepository.findByRestaurantAndDate(r, now);
-            if(existing == null) {
+            if (existing == null) {
                 OperatingDays op = OperatingDays.createForDate(r, now);
                 operatingDaysRepository.save(op);
             }

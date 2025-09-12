@@ -19,9 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class RestaurantService {
@@ -48,6 +45,7 @@ public class RestaurantService {
     // 생성
     @Transactional
     public RestaurantResponseDto createRestaurant(RestaurantRequestDto dto, AccessContext ctx) {
+        AccessGuard.requiredPermission(Action.CREATE, ctx, ResourceScope.of(ctx.getUserId()));
         Restaurant restaurant = new Restaurant();
         restaurant.create(dto, ctx.getUserId());
         restaurantRepository.save(restaurant);
@@ -57,6 +55,7 @@ public class RestaurantService {
     // 수정
     @Transactional
     public RestaurantResponseDto updateRestaurant(Long id, RestaurantRequestDto dto, AccessContext ctx) {
+        AccessGuard.requiredPermission(Action.UPDATE, ctx, ResourceScope.of(ctx.getUserId()));
         Restaurant restaurant = restaurantRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
         AccessGuard.requiredPermission(Action.UPDATE, ctx, ResourceScope.of(restaurant.getSellerId()));
@@ -68,6 +67,7 @@ public class RestaurantService {
     // 삭제 (소프트 삭제)
     @Transactional
     public void deleteRestaurant(Long id, AccessContext ctx) {
+        AccessGuard.requiredPermission(Action.DELETE, ctx, ResourceScope.of(ctx.getUserId()));
         Restaurant restaurant = restaurantRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
         AccessGuard.requiredPermission(Action.DELETE, ctx, ResourceScope.of(restaurant.getSellerId()));

@@ -11,5 +11,6 @@ import java.util.List;
 @Repository
 public interface OperatingDaysRepository extends JpaRepository<OperatingDays, Long> {
     List<OperatingDays> findByRestaurant(Restaurant restaurant);
+
     OperatingDays findByRestaurantAndDate(Restaurant restaurant, LocalDate date);
 }

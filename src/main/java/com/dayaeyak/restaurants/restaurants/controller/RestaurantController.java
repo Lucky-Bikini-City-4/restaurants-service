@@ -3,6 +3,7 @@ package com.dayaeyak.restaurants.restaurants.controller;
 import com.dayaeyak.restaurants.common.responses.ApiResponse;
 import com.dayaeyak.restaurants.common.responses.PageResponse;
 import com.dayaeyak.restaurants.common.security.AccessContext;
+import com.dayaeyak.restaurants.common.security.UserRole;
 import com.dayaeyak.restaurants.restaurants.dto.RestaurantRequestDto;
 import com.dayaeyak.restaurants.restaurants.dto.RestaurantResponseDto;
 import com.dayaeyak.restaurants.restaurants.enums.RestaurantType;
@@ -12,9 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.dayaeyak.restaurants.common.security.UserRole;
-
-import java.util.List;
 
 @RequestMapping("/restaurants")
 @RestController
@@ -27,7 +25,7 @@ public class RestaurantController {
     @ModelAttribute
     public AccessContext setAccessContext(
             @RequestHeader("X-User-Id") Long userId,
-            @RequestHeader("X-Role") String role){
+            @RequestHeader("X-Role") String role) {
         return AccessContext.of(userId, UserRole.of(role));
     }
 

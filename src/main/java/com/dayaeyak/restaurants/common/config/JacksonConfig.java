@@ -18,7 +18,7 @@ public class JacksonConfig {
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Bean
-    public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder){
+    public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
         ObjectMapper mapper = new ObjectMapper();
 
         JavaTimeModule module = new JavaTimeModule();

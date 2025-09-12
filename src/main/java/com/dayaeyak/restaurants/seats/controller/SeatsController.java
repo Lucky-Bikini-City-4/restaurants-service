@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,7 +21,7 @@ public class SeatsController {
 
     // 잔여좌석 조회
     @GetMapping("/{restaurantId}")
-    public ResponseEntity<ApiResponse<SeatAvailabilityDto>> getSeats (
+    public ResponseEntity<ApiResponse<SeatAvailabilityDto>> getSeats(
             @PathVariable Long restaurantId,
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     )                          // @DateTimeFormat: 문자열 파라미터를 날짜/시간 객체로 변환, iso = DateTimeFormat.ISO.DATE_TIME: 표준날짜 시간 포맷
@@ -35,12 +34,12 @@ public class SeatsController {
     @GetMapping("/reserve")
     public ResponseEntity<ApiResponse<SeatAvailabilityDto>> reserveSeats(
             @RequestBody SeatsRequestDto request
-            ){
+    ) {
         SeatAvailabilityDto dto = seatsService.reserveSeats(
                 request.getRestaurantId(),
                 request.getDate(),
                 request.getCount()
         );
-        return  ApiResponse.success(HttpStatus.OK, "예약 성공", dto);
+        return ApiResponse.success(HttpStatus.OK, "예약 성공", dto);
     }
 }

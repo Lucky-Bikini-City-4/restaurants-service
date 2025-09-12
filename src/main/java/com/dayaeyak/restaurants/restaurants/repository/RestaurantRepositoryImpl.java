@@ -31,17 +31,17 @@ public class RestaurantRepositoryImpl implements RestaurantRepositoryCustom {
         builder.and(restaurant.deletedAt.isNull());
 
         // 가게명 검색
-        if (name != null && !name.isBlank()){
+        if (name != null && !name.isBlank()) {
             builder.and(restaurant.name.containsIgnoreCase(name));
         }
 
         // 도시 검색
-        if (city != null && !city.isBlank()){
+        if (city != null && !city.isBlank()) {
             builder.and(restaurant.city.containsIgnoreCase(city));
         }
 
         // 음식점 타입 검색
-        if(type != null){
+        if (type != null) {
             builder.and(restaurant.type.eq(type));
         }
 
@@ -62,7 +62,7 @@ public class RestaurantRepositoryImpl implements RestaurantRepositoryCustom {
                 .where(builder)
                 .fetchOne();
 
-        return new PageImpl<>(results, pageable, total != null ? total : 0L );
+        return new PageImpl<>(results, pageable, total != null ? total : 0L);
     }
 
     private OrderSpecifier<?>[] getOrderSpecifiers(Pageable pageable, QRestaurant restaurant) {
