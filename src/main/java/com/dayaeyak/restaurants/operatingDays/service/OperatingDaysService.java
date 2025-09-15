@@ -29,13 +29,16 @@ public class OperatingDaysService {
     @Transactional
     public void dailyOperatingDays() {
         List<Restaurant> restaurants = restaurantRepository.findAll();
-        LocalDate now = LocalDate.now();
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = today.plusDays(30);
 
         for (Restaurant r : restaurants) {
-            OperatingDays existing = operatingDaysRepository.findByRestaurantAndDate(r, now);
-            if (existing == null) {
-                OperatingDays op = OperatingDays.createForDate(r, now);
-                operatingDaysRepository.save(op);
+            for(LocalDate date = today; !date.isAfter(endDate); date = date.plusDays(1)) {
+                OperatingDays existing = operatingDaysRepository.findByRestaurantAndDate(r, date);
+                if (existing == null) {
+                    OperatingDays op = OperatingDays.createForDate(r, date);
+                    operatingDaysRepository.save(op);
+                }
             }
         }
     }
