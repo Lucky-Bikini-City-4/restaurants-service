@@ -4,9 +4,10 @@ import com.dayaeyak.restaurants.common.responses.ApiResponse;
 import com.dayaeyak.restaurants.common.responses.PageResponse;
 import com.dayaeyak.restaurants.common.security.AccessContext;
 import com.dayaeyak.restaurants.common.security.UserRole;
-import com.dayaeyak.restaurants.restaurants.dto.RestaurantRequestDto;
-import com.dayaeyak.restaurants.restaurants.dto.RestaurantResponseDto;
+import com.dayaeyak.restaurants.restaurants.dto.*;
+import com.dayaeyak.restaurants.restaurants.enums.ActivationStatus;
 import com.dayaeyak.restaurants.restaurants.enums.RestaurantType;
+import com.dayaeyak.restaurants.restaurants.enums.WaitingStatus;
 import com.dayaeyak.restaurants.restaurants.service.RestaurantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -77,6 +78,28 @@ public class RestaurantController {
     ) {
         restaurantService.deleteRestaurant(id, ctx);
         return ApiResponse.success(HttpStatus.NO_CONTENT, "해당 음식점이 삭제되었습니다.", null);
+    }
+
+    // 상태 변화 메서드
+
+    @PostMapping("/{id}/activation")
+    public ResponseEntity<ApiResponse<ActivationStatusDto>> changeActivation(
+            @PathVariable Long id,
+            @RequestBody ActivationRequestDto dto,
+            @ModelAttribute AccessContext ctx
+            ){
+        ActivationStatusDto activationDto = restaurantService.changeActivation(id,dto,ctx);
+        return ApiResponse.success(HttpStatus.OK, "음식점 활성화 상태가 변경되었습니다. ", activationDto);
+    }
+
+    @PostMapping("/{id}/waiting")
+    public ResponseEntity<ApiResponse<WaitingStatusDto>> changeWaiting(
+            @PathVariable Long id,
+            @RequestBody WaitingRequestDto dto,
+            @ModelAttribute AccessContext ctx
+    ){
+        WaitingStatusDto waitingDto = restaurantService.changeWaiting(id,dto,ctx);
+        return  ApiResponse.success(HttpStatus.OK, "웨이팅 상태가 변경되었습니다. ", waitingDto);
     }
 
 }

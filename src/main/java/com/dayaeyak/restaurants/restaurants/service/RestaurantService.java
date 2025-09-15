@@ -8,10 +8,11 @@ import com.dayaeyak.restaurants.common.security.AccessContext;
 import com.dayaeyak.restaurants.common.security.AccessGuard;
 import com.dayaeyak.restaurants.common.security.Action;
 import com.dayaeyak.restaurants.common.security.ResourceScope;
-import com.dayaeyak.restaurants.restaurants.dto.RestaurantRequestDto;
-import com.dayaeyak.restaurants.restaurants.dto.RestaurantResponseDto;
+import com.dayaeyak.restaurants.restaurants.dto.*;
 import com.dayaeyak.restaurants.restaurants.entity.Restaurant;
+import com.dayaeyak.restaurants.restaurants.enums.ActivationStatus;
 import com.dayaeyak.restaurants.restaurants.enums.RestaurantType;
+import com.dayaeyak.restaurants.restaurants.enums.WaitingStatus;
 import com.dayaeyak.restaurants.restaurants.repository.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -55,7 +56,6 @@ public class RestaurantService {
     // 수정
     @Transactional
     public RestaurantResponseDto updateRestaurant(Long id, RestaurantRequestDto dto, AccessContext ctx) {
-        AccessGuard.requiredPermission(Action.UPDATE, ctx, ResourceScope.of(ctx.getUserId()));
         Restaurant restaurant = restaurantRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
         AccessGuard.requiredPermission(Action.UPDATE, ctx, ResourceScope.of(restaurant.getSellerId()));
@@ -67,11 +67,36 @@ public class RestaurantService {
     // 삭제 (소프트 삭제)
     @Transactional
     public void deleteRestaurant(Long id, AccessContext ctx) {
-        AccessGuard.requiredPermission(Action.DELETE, ctx, ResourceScope.of(ctx.getUserId()));
         Restaurant restaurant = restaurantRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
         AccessGuard.requiredPermission(Action.DELETE, ctx, ResourceScope.of(restaurant.getSellerId()));
         restaurant.delete();
         restaurantRepository.save(restaurant);
+    }
+
+    //활성화 상태 변환
+    @Transactional
+    public ActivationStatusDto changeActivation(Long id, ActivationRequestDto dto, AccessContext ctx) {
+        Restaurant restaurant = restaurantRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
+        AccessGuard.requiredPermission(Action.UPDATE, ctx, ResourceScope.of(restaurant.getSellerId()));
+        restaurant.setIsActivation(dto.getStatus());
+        restaurantRepository.save(restaurant);
+
+        return  ActivationStatusDto.from(restaurant);
+    }
+
+
+    //웨이팅 상태 변환
+
+    @Transactional
+    public WaitingStatusDto changeWaiting(Long id, WaitingRequestDto dto, AccessContext ctx) {
+        Restaurant restaurant = restaurantRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
+        AccessGuard.requiredPermission(Action.UPDATE, ctx, ResourceScope.of(restaurant.getSellerId()));
+        restaurant.setWaitingActivation(dto.getStatus());
+        restaurantRepository.save(restaurant);
+
+        return  WaitingStatusDto.from(restaurant);
     }
 }

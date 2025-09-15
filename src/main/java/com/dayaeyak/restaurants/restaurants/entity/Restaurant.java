@@ -23,9 +23,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -138,6 +136,7 @@ public class Restaurant {
             this.operatingDays.forEach(s -> s.setDeletedAt(LocalDateTime.now()));
         }
     }
+
 
     public void generateOperatingDaysAndSeats(int daysAhead) {
         LocalDate today = LocalDate.now();
