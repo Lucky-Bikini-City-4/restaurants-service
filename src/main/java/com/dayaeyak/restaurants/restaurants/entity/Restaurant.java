@@ -116,8 +116,15 @@ public class Restaurant {
         this.closeTime = dto.getCloseTime();
         this.type = dto.getType();
         this.capacity = dto.getCapacity();
-        this.isActivation = dto.getIsActivation();
-        this.waitingActivation = dto.getWaitingActivation();
+        this.city = dto.getCity();
+
+        // activation, waiting 초기화 값 추가
+        this.isActivation = (dto.getIsActivation() != null)
+                ? dto.getIsActivation()
+                : ActivationStatus.ON;
+        this.waitingActivation = (dto.getWaitingActivation() != null)
+                ? dto.getWaitingActivation()
+                : WaitingStatus.ON;
     }
 
     // 소프트 삭제
