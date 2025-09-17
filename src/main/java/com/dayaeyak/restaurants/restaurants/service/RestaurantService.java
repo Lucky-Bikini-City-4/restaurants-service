@@ -8,11 +8,11 @@ import com.dayaeyak.restaurants.common.security.AccessContext;
 import com.dayaeyak.restaurants.common.security.AccessGuard;
 import com.dayaeyak.restaurants.common.security.Action;
 import com.dayaeyak.restaurants.common.security.ResourceScope;
+import com.dayaeyak.restaurants.operatingDays.entity.OperatingDays;
+import com.dayaeyak.restaurants.operatingDays.repository.OperatingDaysRepository;
 import com.dayaeyak.restaurants.restaurants.dto.*;
 import com.dayaeyak.restaurants.restaurants.entity.Restaurant;
-import com.dayaeyak.restaurants.restaurants.enums.ActivationStatus;
 import com.dayaeyak.restaurants.restaurants.enums.RestaurantType;
-import com.dayaeyak.restaurants.restaurants.enums.WaitingStatus;
 import com.dayaeyak.restaurants.restaurants.repository.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class RestaurantService {
     private final RestaurantRepository restaurantRepository;
+    private final OperatingDaysRepository operatingDaysRepository;
 
     // 조건 기반 조회
     @Transactional(readOnly = true)
@@ -49,7 +50,15 @@ public class RestaurantService {
         AccessGuard.requiredPermission(Action.CREATE, ctx, ResourceScope.of(ctx.getUserId()));
         Restaurant restaurant = new Restaurant();
         restaurant.create(dto, ctx.getUserId());
+
         restaurantRepository.save(restaurant);
+        restaurantRepository.flush();
+
+        for(OperatingDays day : restaurant.getOperatingDays()) {
+            operatingDaysRepository.save(day);
+            operatingDaysRepository.flush();
+        }
+
         return restaurant.toResponseDto();
     }
 

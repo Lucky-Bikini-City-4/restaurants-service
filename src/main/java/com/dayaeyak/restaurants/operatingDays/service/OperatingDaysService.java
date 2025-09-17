@@ -51,22 +51,24 @@ public class OperatingDaysService {
 
         return restaurant.getOperatingDays().stream()
                 .map(op -> {
-                    OperatingDaysResponseDto dto = new OperatingDaysResponseDto();
-                    dto.setDate(op.getDate());
-                    dto.setOperatingDate(op.getOperatingDate());
-                    dto.setOpen(op.isOpen());
+                    OperatingDaysResponseDto opDto = new OperatingDaysResponseDto();
+                    opDto.setDate(op.getDate());
+                    opDto.setOperatingDate(op.getOperatingDate());
+                    opDto.setOpen(op.isOpen());
 
-                    //좌석 dto 매핑
-                    List<OperatingDaysResponseDto.SeatDto> seatDtos = restaurant.getSeats().stream()
+                    //좌석 슬롯 dto 매핑
+                    List<OperatingDaysResponseDto.SeatSlotDto> slotDtos = restaurant.getSlots().stream()
                             .filter(s -> s.getDate().equals(op.getDate()))
                             .map(s -> {
-                                OperatingDaysResponseDto.SeatDto sd = new OperatingDaysResponseDto.SeatDto();
-                                sd.setDate(s.getDate());
+                                OperatingDaysResponseDto.SeatSlotDto sd = new OperatingDaysResponseDto.SeatSlotDto();
+                                sd.setId(s.getId());
+                                sd.setStartTime(s.getStartTime());
+                                sd.setEndTime(s.getEndTime());
                                 sd.setAvailableSeats(s.getAvailableSeats());
                                 return sd;
                             }).collect(Collectors.toList());
-                    dto.setSeats(seatDtos);
-                    return dto;
+                    opDto.setSlots(slotDtos);
+                    return opDto;
                 }).collect(Collectors.toList());
 
     }

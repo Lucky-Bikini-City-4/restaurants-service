@@ -8,11 +8,12 @@ import com.dayaeyak.restaurants.restaurants.enums.ActivationStatus;
 import com.dayaeyak.restaurants.restaurants.enums.ClosedDays;
 import com.dayaeyak.restaurants.restaurants.enums.RestaurantType;
 import com.dayaeyak.restaurants.restaurants.enums.WaitingStatus;
-import com.dayaeyak.restaurants.seats.entity.Seats;
+import com.dayaeyak.restaurants.seatSlots.entity.SeatSlots;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -26,12 +27,13 @@ import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.Set;
 
+@Slf4j
 @Getter
 @Setter
 @Entity
 @Table(name = "restaurants")
 @EntityListeners(AuditingEntityListener.class)
-@SQLDelete(sql = "UPDATE restaurants SET deleted_at= NOW()")  // 소프트삭제 구현: delete 호출 시 실제 row는 남기고 deleted_at 컬럼만 갱신
+@SQLDelete(sql = "UPDATE restaurants SET deleted_at= NOW() where id =?")  // 소프트삭제 구현: delete 호출 시 실제 row는 남기고 deleted_at 컬럼만 갱신
 @Where(clause = "deleted_at IS NULL")
 public class Restaurant {
 
@@ -81,14 +83,13 @@ public class Restaurant {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    // 잔여좌석 테이블 -> 자동 생성/삭제/수정 가능
-    @BatchSize(size = 10)
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Seats> seats = new HashSet<>();
-
     // 영업일 테이블 -> 요일별 운영 정보 관리
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<OperatingDays> operatingDays = new HashSet<>();
+
+    @BatchSize(size = 10)
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<SeatSlots> slots = new HashSet<>();
 
     // CRUD 메서드
 
@@ -129,8 +130,8 @@ public class Restaurant {
     public void delete() {
         this.deletedAt = LocalDateTime.now();
 
-        if (this.seats != null) {
-            this.seats.forEach(s -> s.setDeletedAt(LocalDateTime.now()));
+        if (this.slots != null) {
+            this.slots.forEach(s -> s.setDeletedAt(LocalDateTime.now()));
         }
         if (this.operatingDays != null) {
             this.operatingDays.forEach(s -> s.setDeletedAt(LocalDateTime.now()));
@@ -164,19 +165,19 @@ public class Restaurant {
         op.setOperatingDate(dayOfWeek);
         op.setOpen(!dayOfWeek.equals(this.closedDay));
 
-        // 좌석 가져오기 또는 생성
-        Seats seat = seats.stream()
-                .filter(s -> s.getDate().equals(date))
-                .findFirst()
-                .orElseGet(() -> {
-                    Seats newSeat = new Seats();
-                    newSeat.setRestaurant(this);
-                    seats.add(newSeat);
-                    return newSeat;
-                });
-
-        seat.setDate(date);
-        seat.setAvailableSeats(this.capacity);
+        // 운영일 열려있으면 slot 생성
+        if (op.isOpen()) {
+            if (this.openTime == null || this.closeTime == null) {
+                log.warn("영업 시작/종료 시간이 null입니다. 레스토랑ID: {}, 날짜: {} - slot 생성 스킵", this.getId(), date);
+                return;
+            }
+            try {
+                op.generateSeatSlots(this.capacity, this.openTime, this.closeTime);
+            } catch (Exception e) {
+                log.error("Slot 생성 실패 - 레스토랑ID: {}, 날짜: {}", this.getId(), date, e);
+                throw new RuntimeException("Slot 생성 실패", e); // 트랜잭션 롤백
+            }
+        }
     }
 
     public RestaurantResponseDto toResponseDto() {

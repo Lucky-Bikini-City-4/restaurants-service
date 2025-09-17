@@ -47,8 +47,8 @@ public class RestaurantRepositoryImpl implements RestaurantRepositoryCustom {
 
         List<Restaurant> results = queryFactory.
                 selectFrom(restaurant).distinct()
-                .leftJoin(restaurant.seats).fetchJoin()    // <- N+1 문제, LazyInitializationException 예방 가능
-//                .leftJoin(restaurant.operatingDays).fetchJoin()  // Lazy 로딩 유지
+//                .leftJoin(restaurant.seats).fetchJoin()    / /Lazy 로딩 유지
+                .leftJoin(restaurant.operatingDays).fetchJoin()  // <- N+1 문제, LazyInitializationException 예방 가능
                 .where(builder)              // builder에 담긴 조건들을 한꺼번에 WHERE 절로 적용
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
