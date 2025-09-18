@@ -41,6 +41,8 @@ public class Restaurant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Long applicationId;
+
     private String name;
 
     private Long sellerId;
@@ -94,20 +96,21 @@ public class Restaurant {
     // CRUD 메서드
 
     //생성
-    public void create(RestaurantRequestDto dto, Long userId) {
-        setBasicInfo(dto, userId);
+    public void create(RestaurantRequestDto dto) {
+        setBasicInfo(dto);
         generateOperatingDaysAndSeats(30); // 등록 시 미래 30일까지 자동 생성
     }
 
     //수정
     public void update(RestaurantRequestDto dto) {
-        setBasicInfo(dto, this.sellerId);
-        generateOperatingDaysAndSeats(30); // 수정 시 미래 30일까지 동기화
+        setBasicInfo(dto);
+        regenerateOPAndSeats(30); // 수정 시 미래 30일까지 동기화
     }
 
-    private void setBasicInfo(RestaurantRequestDto dto, Long userId) {
+    private void setBasicInfo(RestaurantRequestDto dto) {
+        this.applicationId = dto.getApplicationId();
         this.name = dto.getName();
-        this.sellerId = userId;
+        this.sellerId = dto.getSellerId();
         this.address = dto.getAddress();
         this.phoneNumber = dto.getPhoneNumber();
         this.closedDay = dto.getClosedDay();
@@ -136,6 +139,25 @@ public class Restaurant {
         if (this.operatingDays != null) {
             this.operatingDays.forEach(s -> s.setDeletedAt(LocalDateTime.now()));
         }
+    }
+
+    // 잔여좌석, 운영일자 전체 초기화
+    public void regenerateOPAndSeats(int daysAhead) {
+        LocalDate today = LocalDate.now();
+        operatingDays.removeIf(o ->{
+            if(!o.getDate().isBefore(today)) {
+                if(o.getSeatSlots() != null){
+                    log.info("기존 잔여좌석 삭제 - 음식점 ID: {}", this.getId());
+                    o.getSeatSlots().clear();
+                }
+                log.info("기존 운영일 삭제 - 음식점Id: {}", this.getId());
+                return true;
+            }
+            log.info("오늘{} 이전 데이터는 유지", LocalDate.now());
+            return false;
+        });
+
+        generateOperatingDaysAndSeats(daysAhead);
     }
 
 
@@ -183,6 +205,7 @@ public class Restaurant {
     public RestaurantResponseDto toResponseDto() {
         RestaurantResponseDto dto = new RestaurantResponseDto();
         dto.setId(this.id);
+        dto.setApplicantId(this.applicationId);
         dto.setName(this.name);
         dto.setSellerId(this.sellerId);
         dto.setAddress(this.address);

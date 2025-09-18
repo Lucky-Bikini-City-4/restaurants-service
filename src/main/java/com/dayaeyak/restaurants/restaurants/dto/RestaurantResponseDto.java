@@ -12,6 +12,7 @@ import java.time.LocalTime;
 @Data
 public class RestaurantResponseDto {
     private Long id;
+    private Long applicantId;
     private String name;
     private Long sellerId;
     private String address;

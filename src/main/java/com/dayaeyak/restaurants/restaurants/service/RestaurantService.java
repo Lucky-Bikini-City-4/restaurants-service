@@ -47,9 +47,9 @@ public class RestaurantService {
     // 생성
     @Transactional
     public RestaurantResponseDto createRestaurant(RestaurantRequestDto dto, AccessContext ctx) {
-        AccessGuard.requiredPermission(Action.CREATE, ctx, ResourceScope.of(ctx.getUserId()));
+        AccessGuard.requiredPermission(Action.CREATE, ctx, ResourceScope.of(dto.getSellerId()));
         Restaurant restaurant = new Restaurant();
-        restaurant.create(dto, ctx.getUserId());
+        restaurant.create(dto);
 
         restaurantRepository.save(restaurant);
         restaurantRepository.flush();
