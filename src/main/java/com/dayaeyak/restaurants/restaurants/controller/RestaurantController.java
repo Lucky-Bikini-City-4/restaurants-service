@@ -55,6 +55,7 @@ public class RestaurantController {
             @RequestBody RestaurantRequestDto requestDto,
             @ModelAttribute AccessContext ctx
     ) {
+        System.out.println("REQ BODY: " + requestDto);
         RestaurantResponseDto dto = restaurantService.createRestaurant(requestDto, ctx);
         return ApiResponse.success(HttpStatus.CREATED, "음식점이 생성되었습니다.", dto);
     }

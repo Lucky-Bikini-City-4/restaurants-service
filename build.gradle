@@ -50,6 +50,15 @@ dependencies {
     implementation 'org.springframework.kafka:spring-kafka'
     testImplementation 'org.springframework.kafka:spring-kafka-test'
 
+    // 유레카 디스커버리
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+    // 페인클라이언트
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'io.github.openfeign:feign-micrometer'
+
+    implementation 'me.paulschwarz:spring-dotenv:3.0.0'
+
 }
 
 dependencyManagement {
