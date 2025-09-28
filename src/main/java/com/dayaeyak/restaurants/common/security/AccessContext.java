@@ -1,5 +1,6 @@
 package com.dayaeyak.restaurants.common.security;
 
+import com.dayaeyak.restaurants.users.enums.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
