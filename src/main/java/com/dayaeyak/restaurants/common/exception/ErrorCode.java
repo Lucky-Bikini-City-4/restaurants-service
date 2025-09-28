@@ -9,6 +9,7 @@ public enum ErrorCode {
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다. 다시 입력해주세요."),
     INVALID_SEAT_COUNT(HttpStatus.BAD_REQUEST, "예약 가능 좌석 수는 1명 ~ 4명 입니다. 다시 입력해주세요."),
     INSUFFICIENT_SEATS(HttpStatus.BAD_REQUEST, "예약 가능한 좌석 수를 초과하였습니다."),
+    LOCK_ACQUIRE_FAIL(HttpStatus.LOCKED, "락 획득에 실패하였습니다."),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다.");
 
     private final HttpStatus status;

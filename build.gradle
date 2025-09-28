@@ -59,6 +59,11 @@ dependencies {
 
     implementation 'me.paulschwarz:spring-dotenv:3.0.0'
 
+    // Redisson 연동
+    implementation 'org.redisson:redisson-spring-boot-starter:3.24.2'
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
 }
 
 dependencyManagement {
