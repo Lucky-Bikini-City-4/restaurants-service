@@ -14,6 +14,7 @@ public class RestaurantResponseDto {
     private Long id;
     private Long applicantId;
     private String name;
+    private String imageUrl;
     private Long sellerId;
     private String address;
     private String phoneNumber;
@@ -30,4 +31,5 @@ public class RestaurantResponseDto {
     private ActivationStatus isActivation;
     private String city;
     private WaitingStatus waitingActivation;
+
 }

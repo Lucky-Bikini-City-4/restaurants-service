@@ -8,6 +8,7 @@ import com.dayaeyak.restaurants.restaurants.enums.ActivationStatus;
 import com.dayaeyak.restaurants.restaurants.enums.ClosedDays;
 import com.dayaeyak.restaurants.restaurants.enums.RestaurantType;
 import com.dayaeyak.restaurants.restaurants.enums.WaitingStatus;
+import com.dayaeyak.restaurants.s3.S3Service;
 import com.dayaeyak.restaurants.seatSlots.entity.SeatSlots;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
@@ -21,6 +22,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -44,6 +46,8 @@ public class Restaurant {
     private Long applicationId;
 
     private String name;
+
+    private String imageUrl;
 
     private Long sellerId;
 
@@ -96,20 +100,28 @@ public class Restaurant {
     // CRUD 메서드
 
     //생성
-    public void create(RestaurantRequestDto dto) {
-        setBasicInfo(dto);
+    public void create(RestaurantRequestDto dto, S3Service s3Service) {
+        setBasicInfo(dto, s3Service);
         generateOperatingDaysAndSeats(30); // 등록 시 미래 30일까지 자동 생성
     }
 
     //수정
-    public void update(RestaurantRequestDto dto) {
-        setBasicInfo(dto);
+    public void update(RestaurantRequestDto dto, S3Service s3Service) {
+        setBasicInfo(dto, s3Service);
         regenerateOPAndSeats(30); // 수정 시 미래 30일까지 동기화
     }
 
-    private void setBasicInfo(RestaurantRequestDto dto) {
+    private void setBasicInfo(RestaurantRequestDto dto, S3Service s3Service) {
         this.applicationId = dto.getApplicationId();
         this.name = dto.getName();
+        //이미지 업로드
+        if(dto.getImageFile() != null && !dto.getImageFile().isEmpty()) {
+            try{
+                this.imageUrl = s3Service.uploadFile(dto.getImageFile());
+            }catch(IOException e){
+                throw new RuntimeException("이미지 업로드 실패", e);
+            }
+        }
         this.sellerId = dto.getSellerId();
         this.address = dto.getAddress();
         this.phoneNumber = dto.getPhoneNumber();

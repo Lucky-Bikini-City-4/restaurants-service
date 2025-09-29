@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("/restaurants")
 @RestController
@@ -47,6 +48,7 @@ public class RestaurantController {
     @Authorize(roles = {UserRole.MASTER}, action = Action.CREATE)
     public ResponseEntity<ApiResponse<RestaurantResponseDto>> createRestaurant(
             @RequestBody RestaurantRequestDto requestDto,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
             @PassportHolder Passport passport
     ) {
         System.out.println("REQ BODY: " + requestDto);
@@ -60,6 +62,7 @@ public class RestaurantController {
     public ResponseEntity<ApiResponse<RestaurantResponseDto>> updateRestaurant(
             @PathVariable Long id,
             @RequestBody RestaurantRequestDto requestDto,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
             @PassportHolder Passport passport
     ) {
         RestaurantResponseDto dto = restaurantService.updateRestaurant(id, requestDto);

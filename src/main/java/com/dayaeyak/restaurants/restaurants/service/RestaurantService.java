@@ -14,6 +14,7 @@ import com.dayaeyak.restaurants.restaurants.dto.*;
 import com.dayaeyak.restaurants.restaurants.entity.Restaurant;
 import com.dayaeyak.restaurants.restaurants.enums.RestaurantType;
 import com.dayaeyak.restaurants.restaurants.repository.RestaurantRepository;
+import com.dayaeyak.restaurants.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -29,6 +30,7 @@ public class RestaurantService {
     private final RestaurantRepository restaurantRepository;
     private final OperatingDaysRepository operatingDaysRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final S3Service s3Service;
 
     private final String topic = "restaurants";
 
@@ -56,7 +58,7 @@ public class RestaurantService {
     public RestaurantResponseDto createRestaurant(RestaurantRequestDto dto) {
 
         Restaurant restaurant = new Restaurant();
-        restaurant.create(dto);
+        restaurant.create(dto, s3Service);
         restaurantRepository.save(restaurant);
 
         for (OperatingDays day : restaurant.getOperatingDays()) {
@@ -76,7 +78,7 @@ public class RestaurantService {
         Restaurant restaurant = restaurantRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
 
-        restaurant.update(dto);
+        restaurant.update(dto, s3Service);
         restaurantRepository.save(restaurant);
 
         // 이벤트 등록 (트랜잭션 커밋 후 알람 전송)

@@ -6,6 +6,7 @@ import com.dayaeyak.restaurants.restaurants.enums.RestaurantType;
 import com.dayaeyak.restaurants.restaurants.enums.WaitingStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalTime;
 
@@ -14,6 +15,7 @@ public class RestaurantRequestDto {
 
     private Long applicationId;
     private String name;
+    private MultipartFile imageFile;
     private Long sellerId;
     private String address;
     private String phoneNumber;

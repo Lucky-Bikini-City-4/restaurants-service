@@ -36,3 +36,9 @@ eureka:
       defaultZone: ${EUREKA_DEFAULT_ZONE}
     register-with-eureka: true
     fetch-registry: true
+aws:
+  s3:
+    bucket: ${AWS_S3_BUCKET}   # S3 버킷 이름
+    region: ${AWS_REGION}      # ap-northeast-2 (서울 리전 등)
+    access-key: ${AWS_ACCESS_KEY_ID}   # IAM 사용자 키
+    secret-key: ${AWS_SECRET_ACCESS_KEY}
