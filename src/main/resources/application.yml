@@ -35,7 +35,6 @@ spring:
           enabled:
 server:
   port: ${SERVER_PORT}
-
 eureka:
   client:
     service-url:

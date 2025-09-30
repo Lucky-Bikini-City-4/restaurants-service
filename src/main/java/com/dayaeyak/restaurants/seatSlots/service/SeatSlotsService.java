@@ -28,7 +28,7 @@ public class SeatSlotsService {
     private final RedissonClient redissonClient;
 
     private String loadLuaScript() {  //InputStream은 '외부데이터 -> 바이트 단위'로 읽어오는 추상 클래스
-        try(InputStream is = getClass().getResourceAsStream("/lua/scripts/seatSlots.lua")) {
+        try(InputStream is = getClass().getResourceAsStream("/lua/reserve_seats.lua")) {
             if(is == null) throw new RuntimeException("lua script not found");
             return new String(is.readAllBytes(), StandardCharsets.UTF_8);
         }catch (IOException e){
@@ -37,12 +37,13 @@ public class SeatSlotsService {
     }
 
     @Transactional
-    public SeatSlotDto reserveSlot(Long slotId, int count) {
+    public SeatSlotDto reserveSlot(Long restaurantId, Long operatingDayId, Long slotId, int count) {
         if (count < 1 || count > 4) {
             throw new BusinessException(ErrorCode.INVALID_SEAT_COUNT);
         }
         // DB 조회
-        SeatSlots slot = repository.findById(slotId)
+        SeatSlots slot = repository.findByIdAndOperatingDay_IdAndOperatingDay_Restaurant_Id(
+                        slotId, operatingDayId, restaurantId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SEATS_NOT_FOUND));
 
         String redisKey = "seatSlots:" + slot.getId();

@@ -29,12 +29,14 @@ public class SeatSlotsController {
 
     // 좌석 예약
 
-    @PostMapping("/{slotId}/reserve")
+    @PostMapping("/{restaurantId}/{operatingDayId}/{slotId}/reserve")
     public ResponseEntity<ApiResponse<SeatSlotDto>> reserveSeat(
+            @PathVariable Long restaurantId,
+            @PathVariable Long operatingDayId,
             @PathVariable Long slotId,
             @RequestParam int count
     ) {
-        SeatSlotDto dto = service.reserveSlot(slotId, count);
+        SeatSlotDto dto = service.reserveSlot(restaurantId,operatingDayId, slotId, count);
         return ApiResponse.success(HttpStatus.OK, "예약 성공", dto);
     }
 
