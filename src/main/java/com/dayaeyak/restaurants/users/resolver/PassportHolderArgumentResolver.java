@@ -41,6 +41,8 @@ public class PassportHolderArgumentResolver implements HandlerMethodArgumentReso
         String id = request.getHeader(USER_ID_HEADER);
         String role = request.getHeader(USER_ROLE_HEADER);
 
+        log.info("resolveArgument - X-User-Id={}, X-User-Role={}", id, role);
+
         if (!StringUtils.hasText(id)) {
             throw new CustomRuntimeException(CommonExceptionType.INVALID_USER_ID);
         }
@@ -54,6 +56,7 @@ public class PassportHolderArgumentResolver implements HandlerMethodArgumentReso
                 UserRole.of(role)
         );
 
+        log.info("resolveArgument - Passport={}", passport);
         // request에 세팅 → 인터셉터에서 재사용 가능
         request.setAttribute("passport", passport);
         return passport;

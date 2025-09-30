@@ -1,6 +1,8 @@
 spring:
+  config:
+    import: "optional:file:.env"
   application:
-    name: restaurants-service
+    name: restaurant-service
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -9,7 +11,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
@@ -26,14 +28,23 @@ spring:
     date-format: "yyyy-MM-dd'T'HH:mm:ss"
     serialization:
       write-dates-as-timestamps: false
+  cloud:
+    openfeign:
+      autoconfiguration:
+        jackson:
+          enabled:
+
 
 server:
-  port: 8083
+  port: ${SERVER_PORT}
 
 eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_DEFAULT_ZONE}
+  instance:
+    prefer-ip-address: true
+    ip-address: ${EC2_IP} # 마이크로 서비스 ec2 IP
     register-with-eureka: true
     fetch-registry: true
 aws:

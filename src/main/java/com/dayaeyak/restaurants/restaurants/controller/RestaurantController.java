@@ -45,7 +45,7 @@ public class RestaurantController {
 
     // 생성
     @PostMapping
-    @Authorize(roles = {UserRole.MASTER}, action = Action.CREATE)
+    @Authorize(action = Action.CREATE)
     public ResponseEntity<ApiResponse<RestaurantResponseDto>> createRestaurant(
             @RequestBody RestaurantRequestDto requestDto,
             @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
@@ -58,7 +58,7 @@ public class RestaurantController {
 
     // 수정
     @PutMapping("/{id}")
-    @Authorize(roles = {UserRole.MASTER, UserRole.SELLER}, checkOwner = true, action = Action.UPDATE, resourceId = "id")
+    @Authorize(checkOwner = true, action = Action.UPDATE, resourceId = "id")
     public ResponseEntity<ApiResponse<RestaurantResponseDto>> updateRestaurant(
             @PathVariable Long id,
             @RequestBody RestaurantRequestDto requestDto,
@@ -71,7 +71,7 @@ public class RestaurantController {
 
     // 삭제
     @DeleteMapping("/{id}")
-    @Authorize(roles = {UserRole.MASTER}, action = Action.DELETE, resourceId = "id")
+    @Authorize(action = Action.DELETE, resourceId = "id")
     public ResponseEntity<ApiResponse<Void>> deleteRestaurant(
             @PathVariable Long id,
             @PassportHolder Passport passport
@@ -83,7 +83,7 @@ public class RestaurantController {
     // 상태 변화 메서드
 
     @PostMapping("/{id}/activation")
-    @Authorize(roles = {UserRole.MASTER, UserRole.SELLER}, checkOwner = true, action = Action.UPDATE, resourceId = "id")
+    @Authorize(checkOwner = true, action = Action.UPDATE, resourceId = "id")
     public ResponseEntity<ApiResponse<ActivationStatusDto>> changeActivation(
             @PathVariable Long id,
             @RequestBody ActivationRequestDto dto,
@@ -94,7 +94,7 @@ public class RestaurantController {
     }
 
     @PostMapping("/{id}/waiting")
-    @Authorize(roles = {UserRole.MASTER, UserRole.SELLER}, checkOwner = true, action = Action.UPDATE, resourceId = "id")
+    @Authorize(checkOwner = true, action = Action.UPDATE, resourceId = "id")
     public ResponseEntity<ApiResponse<WaitingStatusDto>> changeWaiting(
             @PathVariable Long id,
             @RequestBody WaitingRequestDto dto,
