@@ -33,8 +33,6 @@ spring:
       autoconfiguration:
         jackson:
           enabled:
-
-
 server:
   port: ${SERVER_PORT}
 
@@ -47,9 +45,16 @@ eureka:
     ip-address: ${EC2_IP} # 마이크로 서비스 ec2 IP
     register-with-eureka: true
     fetch-registry: true
+    deregister-on-shutdown: true
 aws:
   s3:
     bucket: ${AWS_S3_BUCKET}   # S3 버킷 이름
     region: ${AWS_REGION}      # ap-northeast-2 (서울 리전 등)
     access-key: ${AWS_ACCESS_KEY_ID}   # IAM 사용자 키
     secret-key: ${AWS_SECRET_ACCESS_KEY}
+
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+    depends_on:
+      - redis
