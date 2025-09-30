@@ -40,7 +40,7 @@ public class SeatSlots {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
-    private int availableSeats;
+    private Integer availableSeats;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Column(name = "deleted_at")

@@ -81,7 +81,7 @@ public class OperatingDays {
         return op;
     }
     // 하루 slot 생성, 90분 단위
-    public void generateSeatSlots(int capacity, LocalTime openTime, LocalTime closeTime) {
+    public void generateSeatSlots(Integer capacity, LocalTime openTime, LocalTime closeTime) {
         seatSlots.clear();
 
         LocalTime currentTime = openTime;

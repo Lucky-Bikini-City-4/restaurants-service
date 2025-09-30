@@ -15,5 +15,5 @@ public class SeatSlotDto {
     private LocalDate date;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private int availableSeats;
+    private Integer availableSeats;
 }

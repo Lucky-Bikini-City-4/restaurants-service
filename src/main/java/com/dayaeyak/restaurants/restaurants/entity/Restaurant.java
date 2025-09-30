@@ -67,7 +67,7 @@ public class Restaurant {
     @Enumerated(EnumType.STRING)
     private RestaurantType type;
 
-    private int capacity;              // 총 좌석 수
+    private Integer capacity;              // 총 좌석 수
 
     @Enumerated(EnumType.STRING)
     private ActivationStatus isActivation;  // 영업 활성 상태
@@ -105,10 +105,37 @@ public class Restaurant {
         generateOperatingDaysAndSeats(30); // 등록 시 미래 30일까지 자동 생성
     }
 
-    //수정
+    // 수정용 메서드
     public void update(RestaurantRequestDto dto, S3Service s3Service) {
-        setBasicInfo(dto, s3Service);
+        updateBasicInfo(dto, s3Service);
         regenerateOPAndSeats(30); // 수정 시 미래 30일까지 동기화
+    }
+
+    private void updateBasicInfo(RestaurantRequestDto dto, S3Service s3Service) {
+        if (dto.getApplicationId() != null) this.applicationId = dto.getApplicationId();
+        if (dto.getName() != null) this.name = dto.getName();
+
+        // 이미지 업로드
+        if (dto.getImageFile() != null && !dto.getImageFile().isEmpty()) {
+            try {
+                this.imageUrl = s3Service.uploadFile(dto.getImageFile());
+            } catch (IOException e) {
+                throw new RuntimeException("이미지 업로드 실패", e);
+            }
+        }
+
+        if (dto.getSellerId() != null) this.sellerId = dto.getSellerId();
+        if (dto.getAddress() != null) this.address = dto.getAddress();
+        if (dto.getPhoneNumber() != null) this.phoneNumber = dto.getPhoneNumber();
+        if (dto.getClosedDay() != null) this.closedDay = dto.getClosedDay();
+        if (dto.getOpenTime() != null) this.openTime = dto.getOpenTime();
+        if (dto.getCloseTime() != null) this.closeTime = dto.getCloseTime();
+        if (dto.getType() != null) this.type = dto.getType();
+        if (dto.getCapacity() != null) this.capacity = dto.getCapacity();
+        if (dto.getCity() != null) this.city = dto.getCity();
+
+        if (dto.getIsActivation() != null) this.isActivation = dto.getIsActivation();
+        if (dto.getWaitingActivation() != null) this.waitingActivation = dto.getWaitingActivation();
     }
 
     private void setBasicInfo(RestaurantRequestDto dto, S3Service s3Service) {

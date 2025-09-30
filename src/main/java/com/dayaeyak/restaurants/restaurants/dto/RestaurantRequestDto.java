@@ -28,7 +28,7 @@ public class RestaurantRequestDto {
     private LocalTime closeTime;
 
     private RestaurantType type;
-    private int capacity;
+    private Integer capacity;
     private ActivationStatus isActivation;
     private String city;
     private WaitingStatus waitingActivation;
