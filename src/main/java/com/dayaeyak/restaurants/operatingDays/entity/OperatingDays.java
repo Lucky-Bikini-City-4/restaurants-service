@@ -58,6 +58,7 @@ public class OperatingDays {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @LastModifiedDate
+
     private LocalDateTime updatedAt;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -81,6 +82,7 @@ public class OperatingDays {
         return op;
     }
     // 하루 slot 생성, 90분 단위
+
     public void generateSeatSlots(Integer capacity, LocalTime openTime, LocalTime closeTime) {
         seatSlots.clear();
 
@@ -97,6 +99,7 @@ public class OperatingDays {
 
             seatSlots.add(slot);
             currentTime = currentTime.plusMinutes(90);
+            log.info("Generating slot: {} - {}", slot.getStartTime(), slot.getEndTime());
         }
     }
 }

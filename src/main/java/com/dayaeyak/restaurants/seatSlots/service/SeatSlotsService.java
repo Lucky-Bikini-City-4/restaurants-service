@@ -78,7 +78,7 @@ public class SeatSlotsService {
 
                 SeatSlotDto dto = new SeatSlotDto();
                 dto.setId(slot.getId());
-                dto.setDate(slot.getDate());
+                dto.setDate(slot.getOperatingDay().getDate());
                 dto.setStartTime(slot.getStartTime());
                 dto.setEndTime(slot.getEndTime());
                 dto.setAvailableSeats(slot.getAvailableSeats());

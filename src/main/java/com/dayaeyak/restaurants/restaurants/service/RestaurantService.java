@@ -59,7 +59,7 @@ public class RestaurantService {
 
         Restaurant restaurant = new Restaurant();
         restaurant.create(dto, s3Service);
-        restaurantRepository.save(restaurant);
+        restaurantRepository.saveAndFlush(restaurant);
 
         for (OperatingDays day : restaurant.getOperatingDays()) {
             operatingDaysRepository.save(day);

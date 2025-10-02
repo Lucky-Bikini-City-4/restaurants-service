@@ -37,17 +37,28 @@ public class OperatingDaysService {
                 OperatingDays existing = operatingDaysRepository.findByRestaurantAndDate(r, date);
                 if (existing == null) {
                     OperatingDays op = OperatingDays.createForDate(r, date);
-                    operatingDaysRepository.save(op);
+                    operatingDaysRepository.saveAndFlush(op);
                 }
             }
         }
     }
 
     //레스토랑 운영일자 조회 테이블
-    @Transactional(readOnly = true)
+    @Transactional
     public List<OperatingDaysResponseDto> getOperatingDays(Long restaurantId) {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
+
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = today.plusDays(30);
+
+        for (LocalDate date = today; !date.isAfter(endDate); date = date.plusDays(1)) {
+            OperatingDays existing = operatingDaysRepository.findByRestaurantAndDate(restaurant, date);
+            if (existing == null) {
+                OperatingDays op = OperatingDays.createForDate(restaurant, date);
+                operatingDaysRepository.save(op);
+            }
+        }
 
         return restaurant.getOperatingDays().stream()
                 .map(op -> {
@@ -57,7 +68,7 @@ public class OperatingDaysService {
                     opDto.setOpen(op.isOpen());
 
                     //좌석 슬롯 dto 매핑
-                    List<OperatingDaysResponseDto.SeatSlotDto> slotDtos = restaurant.getSlots().stream()
+                    List<OperatingDaysResponseDto.SeatSlotDto> slotDtos = op.getSeatSlots().stream()
                             .filter(s -> s.getDate().equals(op.getDate()))
                             .map(s -> {
                                 OperatingDaysResponseDto.SeatSlotDto sd = new OperatingDaysResponseDto.SeatSlotDto();
