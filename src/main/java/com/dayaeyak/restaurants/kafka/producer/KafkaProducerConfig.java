@@ -3,6 +3,7 @@ package com.dayaeyak.restaurants.kafka.producer;
 import com.dayaeyak.restaurants.kafka.producer.dtos.ServiceRegisterRequestDto;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -16,7 +17,10 @@ import java.util.Map;
 @Configuration
 public class KafkaProducerConfig {
 
-    private final String SERVER = "localhost:9092";
+//    private final String SERVER = "localhost:9092";
+
+    @Value("${KAFKA_BOOTSTRAP_SERVERS}")
+    private String SERVER;
 
     @Bean
     public Map<String, Object> getStringObjectMap() {
