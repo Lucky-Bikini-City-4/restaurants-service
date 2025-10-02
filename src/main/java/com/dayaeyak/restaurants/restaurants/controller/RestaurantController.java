@@ -9,7 +9,6 @@ import com.dayaeyak.restaurants.restaurants.service.RestaurantService;
 import com.dayaeyak.restaurants.users.annotation.Authorize;
 import com.dayaeyak.restaurants.users.annotation.PassportHolder;
 import com.dayaeyak.restaurants.users.dto.Passport;
-import com.dayaeyak.restaurants.users.enums.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
