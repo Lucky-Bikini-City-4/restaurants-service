@@ -26,13 +26,13 @@ public class RestaurantController {
 
     // 음식점 이름, 지역명으로 검색, 비회원도 조회 가능
     @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<RestaurantResponseDto>>> searchRestaurants(
+    public ResponseEntity<ApiResponse<PageResponse<RestaurantListResponseDto>>> searchRestaurants(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String city,
             @RequestParam(required = false) RestaurantType type,
             Pageable pageable
     ) {
-        PageResponse<RestaurantResponseDto> response = restaurantService.searchRestaurants(name, city, type, pageable);
+        PageResponse<RestaurantListResponseDto> response = restaurantService.searchRestaurants(name, city, type, pageable);
         return ApiResponse.success(HttpStatus.OK, "조회 성공", response);
     }
 

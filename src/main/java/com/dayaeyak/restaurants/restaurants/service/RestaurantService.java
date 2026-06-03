@@ -9,46 +9,50 @@ import com.dayaeyak.restaurants.kafka.producer.dtos.ServiceRegisterRequestDto;
 import com.dayaeyak.restaurants.kafka.producer.enums.ServiceType;
 import com.dayaeyak.restaurants.kafka.producer.enums.Status;
 import com.dayaeyak.restaurants.operatingDays.entity.OperatingDays;
-import com.dayaeyak.restaurants.operatingDays.repository.OperatingDaysRepository;
 import com.dayaeyak.restaurants.restaurants.dto.*;
 import com.dayaeyak.restaurants.restaurants.entity.Restaurant;
 import com.dayaeyak.restaurants.restaurants.enums.RestaurantType;
 import com.dayaeyak.restaurants.restaurants.repository.RestaurantRepository;
 import com.dayaeyak.restaurants.s3.S3Service;
+import com.dayaeyak.restaurants.seatSlots.entity.SeatSlots;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class RestaurantService {
     private final RestaurantRepository restaurantRepository;
-    private final OperatingDaysRepository operatingDaysRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final S3Service s3Service;
+    private final RedissonClient redissonClient;
 
-    private final String topic = "restaurants";
+    private final String topic = "restaurant";
 
 
     // 조건 기반 조회
     @Transactional(readOnly = true)
-    public PageResponse<RestaurantResponseDto> searchRestaurants(
+    public PageResponse<RestaurantListResponseDto> searchRestaurants(
             String name, String city, RestaurantType type, Pageable pageable
     ) {
         Page<Restaurant> page = restaurantRepository.SearchByNameOrCity(name, city, type, pageable);
-        Page<RestaurantResponseDto> dtoPage = page.map(Restaurant::toResponseDto);
+        Page<RestaurantListResponseDto> dtoPage = page.map(Restaurant::toListResponseDto);
         return PageResponse.of(dtoPage);
     }
 
     // 단건 조회
     @Transactional(readOnly = true)
     public RestaurantResponseDto getRestaurant(Long id) {
-        Restaurant restaurant = restaurantRepository.findByIdAndDeletedAtIsNull(id)
+        Restaurant restaurant = restaurantRepository.findWithOperatingDaysByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
         return restaurant.toResponseDto();
     }
@@ -67,11 +71,7 @@ public class RestaurantService {
         Restaurant restaurant = new Restaurant();
         restaurant.create(dto, s3Service);
         restaurantRepository.saveAndFlush(restaurant);
-
-        for (OperatingDays day : restaurant.getOperatingDays()) {
-            operatingDaysRepository.save(day);
-            operatingDaysRepository.flush();
-        }
+        registerSeatSlotRedisInitializationAfterCommit(restaurant);
 
         // 이벤트 등록 (트랜잭션 커밋 후 알람 전송)
         registerEvent(restaurant.getId(), dto.getSellerId(), dto.getName(), Status.CREATED);
@@ -86,7 +86,8 @@ public class RestaurantService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESTAURANT_NOT_FOUND));
 
         restaurant.update(dto, s3Service);
-        restaurantRepository.save(restaurant);
+        restaurantRepository.saveAndFlush(restaurant);
+        registerSeatSlotRedisInitializationAfterCommit(restaurant);
 
         // 이벤트 등록 (트랜잭션 커밋 후 알람 전송)
         registerEvent(restaurant.getId(), dto.getSellerId(), dto.getName(), Status.UPDATED);
@@ -139,17 +140,48 @@ public class RestaurantService {
                 restaurantName,
                 status
         );
+        eventPublisher.publishEvent(new RestaurantAlarmEvent(this, topic, dto));
+    }
+
+    private void registerSeatSlotRedisInitializationAfterCommit(Restaurant restaurant) {
+        List<SeatSlotRedisSnapshot> snapshots = collectSeatSlotSnapshots(restaurant);
+        if (snapshots.isEmpty()) {
+            return;
+        }
+
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    // 이벤트 소스는 RestaurantService.this로 지정
-                    eventPublisher.publishEvent(new RestaurantAlarmEvent(RestaurantService.this, topic, dto));
+                    syncSeatSlotsToRedis(snapshots);
                 }
             });
         } else {
-            //트랜잭션 없으면 바로 발행(안전 장치)
-            eventPublisher.publishEvent(new RestaurantAlarmEvent(this, topic, dto));
+            syncSeatSlotsToRedis(snapshots);
         }
+    }
+
+    private List<SeatSlotRedisSnapshot> collectSeatSlotSnapshots(Restaurant restaurant) {
+        List<SeatSlotRedisSnapshot> snapshots = new ArrayList<>();
+        for (OperatingDays operatingDay : restaurant.getOperatingDays()) {
+            for (SeatSlots seatSlot : operatingDay.getSeatSlots()) {
+                if (seatSlot.getId() != null) {
+                    snapshots.add(new SeatSlotRedisSnapshot(
+                            "seatSlots:" + seatSlot.getId(),
+                            seatSlot.getAvailableSeats()
+                    ));
+                }
+            }
+        }
+        return snapshots;
+    }
+
+    private void syncSeatSlotsToRedis(List<SeatSlotRedisSnapshot> snapshots) {
+        for (SeatSlotRedisSnapshot snapshot : snapshots) {
+            redissonClient.getBucket(snapshot.redisKey()).set(snapshot.availableSeats());
+        }
+    }
+
+    private record SeatSlotRedisSnapshot(String redisKey, Integer availableSeats) {
     }
 }

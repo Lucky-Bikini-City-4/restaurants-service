@@ -270,8 +270,8 @@ public class Restaurant {
     public RestaurantResponseDto toResponseDto() {
         RestaurantResponseDto dto = new RestaurantResponseDto();
         dto.setId(this.id);
-        dto.setApplicantId(this.applicationId);
         dto.setName(this.name);
+        dto.setImageUrl(this.imageUrl);
         dto.setSellerId(this.sellerId);
         dto.setAddress(this.address);
         dto.setPhoneNumber(this.phoneNumber);
@@ -281,6 +281,37 @@ public class Restaurant {
         dto.setType(this.type);
         dto.setCapacity(this.capacity);
         dto.setIsActivation(this.isActivation);
+        dto.setCity(this.city);
+        dto.setWaitingActivation(this.waitingActivation);
+        dto.setOperatingDays(this.operatingDays.stream()
+                .sorted(Comparator.comparing(
+                        OperatingDays::getDate,
+                        Comparator.nullsLast(Comparator.naturalOrder())
+                ))
+                .map(op -> {
+                    OperatingDaysResponseDto opDto = new OperatingDaysResponseDto();
+                    opDto.setId(op.getId());
+                    opDto.setDate(op.getDate());
+                    opDto.setOperatingDate(op.getOperatingDate());
+                    opDto.setOpen(op.isOpen());
+                    return opDto;
+                })
+                .toList());
+        return dto;
+    }
+
+    public RestaurantListResponseDto toListResponseDto() {
+        RestaurantListResponseDto dto = new RestaurantListResponseDto();
+        dto.setId(this.id);
+        dto.setName(this.name);
+        dto.setImageUrl(this.imageUrl);
+        dto.setAddress(this.address);
+        dto.setClosedDay(this.closedDay);
+        dto.setOpenTime(this.openTime);
+        dto.setCloseTime(this.closeTime);
+        dto.setType(this.type);
+        dto.setIsActivation(this.isActivation);
+        dto.setCity(this.city);
         dto.setWaitingActivation(this.waitingActivation);
         return dto;
     }
