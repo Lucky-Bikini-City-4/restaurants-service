@@ -38,14 +38,15 @@ public class OperatingDays {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "date")
     private LocalDate date; // 오늘 날짜
 
     @Enumerated(EnumType.STRING)
-    private ClosedDays operatingDate; // 현재 요일
+    private ClosedDays operatingDate; // 현재 요일니
 
     private boolean isOpen; // 해당 요일 운영 여부
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "restaurant_id")  // 연관된 음식점
     private Restaurant restaurant;
 
@@ -65,15 +66,30 @@ public class OperatingDays {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    public void delete(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+        if (this.seatSlots != null) {
+            this.seatSlots.forEach(seatSlot -> seatSlot.setDeletedAt(deletedAt));
+        }
+    }
+
     // 오늘 날짜 기준으로 OperatingDays 생성
     public static OperatingDays createForDate(Restaurant restaurant, LocalDate date) {
         OperatingDays op = new OperatingDays();
         op.setRestaurant(restaurant);
         op.setDate(date);
+        log.info("operating day created: {}", date);
 
         ClosedDays day = ClosedDays.fromDayOfWeek(DayOfWeek.from(date));
         op.setOperatingDate(day);
-        op.setOpen(!day.equals(restaurant.getClosedDay()));
+        boolean hasOperatingInfo = restaurant.getClosedDay() != null
+                && restaurant.getOpenTime() != null
+                && restaurant.getCloseTime() != null
+                && restaurant.getCapacity() != null
+                && restaurant.getCapacity() > 0
+                && restaurant.getOpenTime().isBefore(restaurant.getCloseTime());
+
+        op.setOpen(hasOperatingInfo && !day.equals(restaurant.getClosedDay()));
 
         // 운영 중이면 slot을 생성
         if (op.isOpen()) {

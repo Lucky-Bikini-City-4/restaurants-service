@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -60,27 +60,19 @@ public class OperatingDaysService {
             }
         }
 
-        return restaurant.getOperatingDays().stream()
+        return operatingDaysRepository.findByRestaurant(restaurant).stream()
+                .sorted(Comparator.comparing(
+                        OperatingDays::getDate,
+                        Comparator.nullsLast(Comparator.naturalOrder())
+                ))
                 .map(op -> {
                     OperatingDaysResponseDto opDto = new OperatingDaysResponseDto();
+                    opDto.setId(op.getId());
                     opDto.setDate(op.getDate());
                     opDto.setOperatingDate(op.getOperatingDate());
                     opDto.setOpen(op.isOpen());
-
-                    //좌석 슬롯 dto 매핑
-                    List<OperatingDaysResponseDto.SeatSlotDto> slotDtos = op.getSeatSlots().stream()
-                            .filter(s -> s.getDate().equals(op.getDate()))
-                            .map(s -> {
-                                OperatingDaysResponseDto.SeatSlotDto sd = new OperatingDaysResponseDto.SeatSlotDto();
-                                sd.setId(s.getId());
-                                sd.setStartTime(s.getStartTime());
-                                sd.setEndTime(s.getEndTime());
-                                sd.setAvailableSeats(s.getAvailableSeats());
-                                return sd;
-                            }).collect(Collectors.toList());
-                    opDto.setSlots(slotDtos);
                     return opDto;
-                }).collect(Collectors.toList());
+                }).toList();
 
     }
 }
