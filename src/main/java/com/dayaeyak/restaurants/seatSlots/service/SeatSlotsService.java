@@ -12,6 +12,8 @@ import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,9 +54,16 @@ public class SeatSlotsService {
         // Redisson 분산락(lock key: seatLock:{slotId})
         String lockKey = "seatLock:" + slot.getId();
         RLock lock = redissonClient.getLock(lockKey); //RLock: redisson에서 제공하는 분산락 객체
+        boolean lockAcquired = false;
+        boolean unlockRegistered = false;
+        Integer seatsBeforeReservation = null;
         try {
-            // 최대 5초 대기 후 락 획득, 락 유지 시간 3초
-            if(lock.tryLock(5, 3, TimeUnit.SECONDS)){
+            // 최대 5초 대기 후 락 획득, watchdog이 트랜잭션 완료 전까지 락을 연장
+            if(lock.tryLock(5, TimeUnit.SECONDS)){
+                lockAcquired = true;
+                initializeRedisIfAbsent(redisKey, slot.getAvailableSeats());
+                seatsBeforeReservation = slot.getAvailableSeats();
+
                 // Lua 스크립트 실행
                 Number result = redissonClient.getScript().eval( //getScript(): redis lua 스크립트 실행 객체 가져옴
                         RScript.Mode.READ_WRITE, // 스크립트 실행모드 읽기와 쓰기 모두 허용
@@ -71,10 +80,15 @@ public class SeatSlotsService {
                 }
                 // DB 업데이트
                 slot.setAvailableSeats(slot.getAvailableSeats() - count);
-                repository.save(slot);
+                repository.saveAndFlush(slot);
 
-                // DB 기준으로 Redis 동기화(장애 대비) = Redis 값을 DB 기준으로 강제로 맞춤
-                redissonClient.getBucket(redisKey).set(slot.getAvailableSeats());
+                registerRedisSyncAfterTransaction(
+                        lock,
+                        redisKey,
+                        seatsBeforeReservation,
+                        slot.getAvailableSeats()
+                );
+                unlockRegistered = true;
 
                 SeatSlotDto dto = new SeatSlotDto();
                 dto.setId(slot.getId());
@@ -89,9 +103,53 @@ public class SeatSlotsService {
         } catch(InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("락 획득 중 인터럽트 발생");
+        } catch (RuntimeException e) {
+            if (lockAcquired && !unlockRegistered && seatsBeforeReservation != null) {
+                redissonClient.getBucket(redisKey).set(seatsBeforeReservation);
+            }
+            throw e;
         }finally {
-            if(lock.isHeldByCurrentThread()){
+            if(lockAcquired && !unlockRegistered && lock.isHeldByCurrentThread()){
                 lock.unlock();
+            }
+        }
+    }
+
+    private void initializeRedisIfAbsent(String redisKey, Integer availableSeats) {
+        if (redissonClient.getBucket(redisKey).get() == null) {
+            redissonClient.getBucket(redisKey).set(availableSeats);
+        }
+    }
+
+    private void registerRedisSyncAfterTransaction(
+            RLock lock,
+            String redisKey,
+            Integer seatsBeforeReservation,
+            Integer seatsAfterReservation
+    ) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    try {
+                        Integer seatsToSync = status == STATUS_COMMITTED
+                                ? seatsAfterReservation
+                                : seatsBeforeReservation;
+                        redissonClient.getBucket(redisKey).set(seatsToSync);
+                    } finally {
+                        if (lock.isHeldByCurrentThread()) {
+                            lock.unlock();
+                        }
+                    }
+                }
+            });
+        } else {
+            try {
+                redissonClient.getBucket(redisKey).set(seatsAfterReservation);
+            } finally {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
             }
         }
     }
