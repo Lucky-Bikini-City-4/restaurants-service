@@ -57,6 +57,13 @@ public class RestaurantService {
     @Transactional
     public RestaurantResponseDto createRestaurant(RestaurantRequestDto dto) {
 
+        if (dto.getApplicationId() != null) {
+            var existingRestaurant = restaurantRepository.findByApplicationIdAndDeletedAtIsNull(dto.getApplicationId());
+            if (existingRestaurant.isPresent()) {
+                return existingRestaurant.get().toResponseDto();
+            }
+        }
+
         Restaurant restaurant = new Restaurant();
         restaurant.create(dto, s3Service);
         restaurantRepository.saveAndFlush(restaurant);

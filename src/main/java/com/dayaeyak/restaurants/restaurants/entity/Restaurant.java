@@ -2,6 +2,10 @@ package com.dayaeyak.restaurants.restaurants.entity;
 
 
 import com.dayaeyak.restaurants.operatingDays.entity.OperatingDays;
+import com.dayaeyak.restaurants.operatingDays.dto.OperatingDaysResponseDto;
+import com.dayaeyak.restaurants.common.exception.BusinessException;
+import com.dayaeyak.restaurants.common.exception.ErrorCode;
+import com.dayaeyak.restaurants.restaurants.dto.RestaurantListResponseDto;
 import com.dayaeyak.restaurants.restaurants.dto.RestaurantRequestDto;
 import com.dayaeyak.restaurants.restaurants.dto.RestaurantResponseDto;
 import com.dayaeyak.restaurants.restaurants.enums.ActivationStatus;
@@ -9,13 +13,11 @@ import com.dayaeyak.restaurants.restaurants.enums.ClosedDays;
 import com.dayaeyak.restaurants.restaurants.enums.RestaurantType;
 import com.dayaeyak.restaurants.restaurants.enums.WaitingStatus;
 import com.dayaeyak.restaurants.s3.S3Service;
-import com.dayaeyak.restaurants.seatSlots.entity.SeatSlots;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 import org.springframework.data.annotation.CreatedDate;
@@ -26,6 +28,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -93,22 +96,25 @@ public class Restaurant {
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<OperatingDays> operatingDays = new HashSet<>();
 
-    @BatchSize(size = 10)
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<SeatSlots> slots = new HashSet<>();
-
     // CRUD 메서드
 
     //생성
     public void create(RestaurantRequestDto dto, S3Service s3Service) {
         setBasicInfo(dto, s3Service);
-        generateOperatingDaysAndSeats(30); // 등록 시 미래 30일까지 자동 생성
+        if (hasOperatingInfo()) {
+            validateOperatingInfo();
+            generateOperatingDaysAndSeats(30); // 운영정보가 모두 입력된 경우에만 미래 30일까지 자동 생성
+        }
     }
 
     // 수정용 메서드
     public void update(RestaurantRequestDto dto, S3Service s3Service) {
+        boolean operatingInfoTouched = isOperatingInfoTouched(dto);
         updateBasicInfo(dto, s3Service);
-        regenerateOPAndSeats(30); // 수정 시 미래 30일까지 동기화
+        if (operatingInfoTouched) {
+            validateOperatingInfo();
+            regenerateOPAndSeats(30); // 운영정보 수정 시 미래 30일까지 동기화
+        }
     }
 
     private void updateBasicInfo(RestaurantRequestDto dto, S3Service s3Service) {
@@ -168,15 +174,38 @@ public class Restaurant {
                 : WaitingStatus.ON;
     }
 
+    private boolean isOperatingInfoTouched(RestaurantRequestDto dto) {
+        return dto.getClosedDay() != null
+                || dto.getOpenTime() != null
+                || dto.getCloseTime() != null
+                || dto.getCapacity() != null;
+    }
+
+    private boolean hasOperatingInfo() {
+        return this.closedDay != null
+                || this.openTime != null
+                || this.closeTime != null
+                || this.capacity != null;
+    }
+
+    private void validateOperatingInfo() {
+        if (this.closedDay == null
+                || this.openTime == null
+                || this.closeTime == null
+                || this.capacity == null
+                || this.capacity <= 0
+                || !this.openTime.isBefore(this.closeTime)) {
+            throw new BusinessException(ErrorCode.INVALID_RESTAURANT_OPERATING_INFO);
+        }
+    }
+
     // 소프트 삭제
     public void delete() {
-        this.deletedAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
 
-        if (this.slots != null) {
-            this.slots.forEach(s -> s.setDeletedAt(LocalDateTime.now()));
-        }
+        this.deletedAt = now;
         if (this.operatingDays != null) {
-            this.operatingDays.forEach(s -> s.setDeletedAt(LocalDateTime.now()));
+            this.operatingDays.forEach(operatingDay -> operatingDay.delete(now));
         }
     }
 
@@ -228,10 +257,7 @@ public class Restaurant {
 
         // 운영일 열려있으면 slot 생성
         if (op.isOpen()) {
-            if (this.openTime == null || this.closeTime == null) {
-                log.warn("영업 시작/종료 시간이 null입니다. 레스토랑ID: {}, 날짜: {} - slot 생성 스킵", this.getId(), date);
-                return;
-            }
+            validateOperatingInfo();
             try {
                 op.generateSeatSlots(this.capacity, this.openTime, this.closeTime);
             } catch (Exception e) {

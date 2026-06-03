@@ -12,6 +12,7 @@ import com.dayaeyak.restaurants.users.dto.Passport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,23 +48,22 @@ public class RestaurantController {
     @Authorize(action = Action.CREATE)
     public ResponseEntity<ApiResponse<RestaurantResponseDto>> createRestaurant(
             @RequestBody RestaurantRequestDto requestDto,
-            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
             @PassportHolder Passport passport
     ) {
-        System.out.println("REQ BODY: " + requestDto);
         RestaurantResponseDto dto = restaurantService.createRestaurant(requestDto);
         return ApiResponse.success(HttpStatus.CREATED, "음식점이 생성되었습니다.", dto);
     }
 
     // 수정
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Authorize(checkOwner = true, action = Action.UPDATE, resourceId = "id")
     public ResponseEntity<ApiResponse<RestaurantResponseDto>> updateRestaurant(
             @PathVariable Long id,
-            @RequestBody RestaurantRequestDto requestDto,
+            @RequestPart("requestDto") RestaurantRequestDto requestDto,
             @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
             @PassportHolder Passport passport
     ) {
+        requestDto.setImageFile(imageFile);
         RestaurantResponseDto dto = restaurantService.updateRestaurant(id, requestDto);
         return ApiResponse.success(HttpStatus.OK, "해당 음식점이 수정되었습니다.", dto);
     }
