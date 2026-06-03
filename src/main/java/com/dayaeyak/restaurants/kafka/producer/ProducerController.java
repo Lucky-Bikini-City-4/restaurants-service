@@ -1,7 +1,6 @@
 package com.dayaeyak.restaurants.kafka.producer;
 
 import com.dayaeyak.restaurants.kafka.producer.dtos.ServiceRegisterRequestDto;
-import com.dayaeyak.restaurants.kafka.producer.enums.ProducerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,4 +22,3 @@ public class ProducerController {
     }
 
 }
-

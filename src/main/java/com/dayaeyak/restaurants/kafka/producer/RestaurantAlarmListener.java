@@ -1,6 +1,5 @@
 package com.dayaeyak.restaurants.kafka.producer;
 
-import com.dayaeyak.restaurants.kafka.producer.enums.ProducerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;

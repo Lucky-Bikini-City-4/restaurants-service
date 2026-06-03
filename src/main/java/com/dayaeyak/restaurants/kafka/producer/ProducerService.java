@@ -1,4 +1,4 @@
-package com.dayaeyak.restaurants.kafka.producer.enums;
+package com.dayaeyak.restaurants.kafka.producer;
 
 import com.dayaeyak.restaurants.kafka.producer.dtos.ServiceRegisterRequestDto;
 import lombok.RequiredArgsConstructor;
@@ -16,4 +16,3 @@ public class ProducerService {
         kafkaTemplateSRR.send(topic, key, dto);
     }
 }
-
